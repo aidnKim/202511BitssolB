@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,8 +27,11 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.sideproject01.dto.ProgressDto;
+import com.example.sideproject01.dto.ProgressResponseDto;
 import com.example.sideproject01.dto.SoundDto;
 import com.example.sideproject01.dto.SoundUploadRequestDto;
+import com.example.sideproject01.service.ProgressService;
 import com.example.sideproject01.service.SoundService;
 
 import jakarta.validation.Valid;
@@ -37,7 +42,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/v1")
 public class RestSoundController {
 
-    private final SoundService soundService;
+	private final SoundService soundService;
+	private final ProgressService progressService;
 
     @Value("${file.location}")
     private String fileLocation; // 파일을 저장할 위치
@@ -132,5 +138,22 @@ public class RestSoundController {
         soundService.incrementPlayCount(soundId);
         return ResponseEntity.ok().build();
     }
+    
+    //재생 위치 저장
+    @PutMapping("/sounds/{soundId}/progress")
+    public ResponseEntity<?> saveProgress(
+        @PathVariable Integer soundId,
+        @RequestBody ProgressDto dto  // { lastPosition: 120, duration: 300 }
+    ) {
+        progressService.saveProgress(soundId, dto.getLastPosition(), dto.getDuration());
+        return ResponseEntity.ok().build();
+    }
+    
+    //내 진행률 조회
+    @GetMapping("/sounds/progress")
+    public List<ProgressResponseDto> getMyProgress() {
+        return progressService.getMyProgress();
+    }
+
 
 }
