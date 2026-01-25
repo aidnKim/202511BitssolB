@@ -4,6 +4,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -69,7 +70,14 @@ public class SoundServiceImpl implements SoundService {
 		}
 
 		return sounds.stream()
-				.map(sound -> SoundDto.toDto(sound, sound.getUploader()))
+				.map(sound ->{
+					// 각 Sound의 태그 조회
+		            List<String> tagNames = soundTagRepo.findBySoundId_SoundId(sound.getSoundId())
+		                    .stream()
+		                    .map(st -> st.getTagId().getName())
+		                    .collect(Collectors.toList());
+		            return SoundDto.toDto(sound, sound.getUploader(), tagNames);
+				})
 				.toList();
 	}
 
@@ -155,9 +163,15 @@ public class SoundServiceImpl implements SoundService {
 	@Override
 	public SoundDto getSoundById(Integer soundId) {
 		Sound sound = soundRepo.findById(soundId).orElseThrow(() -> new IllegalArgumentException("해당 소리를 찾을 수 없습니다."));
-
-		User uploader = sound.getUploader();
-		return SoundDto.toDto(sound, uploader);
+	    User uploader = sound.getUploader();
+	    
+	    // 태그 조회
+	    List<String> tagNames = soundTagRepo.findBySoundId_SoundId(soundId)
+	            .stream()
+	            .map(st -> st.getTagId().getName())
+	            .collect(Collectors.toList());
+	    
+	    return SoundDto.toDto(sound, uploader, tagNames);
 	}
 
 	@Override

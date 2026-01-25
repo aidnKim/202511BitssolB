@@ -1,6 +1,7 @@
 package com.example.sideproject01.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.example.sideproject01.entity.Sound;
 import com.example.sideproject01.entity.User;
@@ -30,8 +31,9 @@ public class SoundDto {
 	private Integer playCount;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private List<String> tags;
 
-	 public static SoundDto toDto(Sound entity, User userEntity) {
+	 public static SoundDto toDto(Sound entity, User userEntity, List<String> tagNames) {
 		return SoundDto.builder()
 				.soundId(entity.getSoundId())
 				.uploader(userEntity.getUserName())
@@ -42,6 +44,7 @@ public class SoundDto {
 				.playCount(entity.getPlayCount())
 				.createdAt(entity.getCreatedAt())
 				.updatedAt(entity.getUpdatedAt())
+				.tags(tagNames)
 				.build();
 	}
 

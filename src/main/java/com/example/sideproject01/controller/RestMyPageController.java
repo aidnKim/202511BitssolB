@@ -1,6 +1,7 @@
 package com.example.sideproject01.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +14,7 @@ import com.example.sideproject01.entity.Sound;
 import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.PlayHistoryRepository;
 import com.example.sideproject01.repository.SoundRepository;
+import com.example.sideproject01.repository.SoundTagRepository;
 import com.example.sideproject01.repository.UserRepository;
 import com.example.sideproject01.service.MyPageDeleteService;
 import com.example.sideproject01.service.RecentPlayService;
@@ -29,6 +31,7 @@ public class RestMyPageController {
     private final PlayHistoryRepository playHistoryRepo;
     private final RecentPlayService recentPlayService;
     private final MyPageDeleteService myPageDeleteService;
+    private final SoundTagRepository soundTagRepo;
     
 
     private User getCurrentUser() {
@@ -59,7 +62,11 @@ public class RestMyPageController {
         return list.stream()
                 .map(ph -> {
                     Sound s = ph.getSoundId();
-                    return SoundDto.toDto(s, s.getUploader()); // ✅ 팀 규칙(기존 toDto 형태) 유지
+                    List<String> tagNames = soundTagRepo.findBySoundId_SoundId(s.getSoundId())
+                            .stream()
+                            .map(st -> st.getTagId().getName())
+                            .collect(Collectors.toList());
+                    return SoundDto.toDto(s, s.getUploader(), tagNames); // ✅ 팀 규칙(기존 toDto 형태) 유지
                 })
                 .toList();
     }
@@ -75,7 +82,13 @@ public class RestMyPageController {
         List<Sound> list = soundRepo.findByUploader_IdOrderByCreatedAtDesc(user.getId());
 
         return list.stream()
-                .map(s -> SoundDto.toDto(s, s.getUploader()))
+        		.map(s -> {
+        		    List<String> tagNames = soundTagRepo.findBySoundId_SoundId(s.getSoundId())
+        		            .stream()
+        		            .map(st -> st.getTagId().getName())
+        		            .collect(Collectors.toList());
+        		    return SoundDto.toDto(s, s.getUploader(), tagNames);
+        		})
                 .toList();
     }
     

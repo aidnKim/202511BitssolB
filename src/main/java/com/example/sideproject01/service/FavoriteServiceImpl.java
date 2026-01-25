@@ -2,6 +2,7 @@ package com.example.sideproject01.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import com.example.sideproject01.entity.Sound;
 import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.FavoriteRepository;
 import com.example.sideproject01.repository.SoundRepository;
+import com.example.sideproject01.repository.SoundTagRepository;
 import com.example.sideproject01.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     private final FavoriteRepository favoriteRepo;
     private final UserRepository userRepo;
     private final SoundRepository soundRepo;
+    private final SoundTagRepository soundTagRepo;
 
     private User getCurrentUser() {
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -68,7 +71,14 @@ public class FavoriteServiceImpl implements FavoriteService {
         List<Favorite> favorites = favoriteRepo.findByUserIdOrderByCreatedAtDesc(user);
 
         return favorites.stream()
-                .map(fav -> SoundDto.toDto(fav.getSoundId(), fav.getSoundId().getUploader()))
+        		.map(fav -> {
+        		    Sound sound = fav.getSoundId();
+        		    List<String> tagNames = soundTagRepo.findBySoundId_SoundId(sound.getSoundId())
+        		            .stream()
+        		            .map(st -> st.getTagId().getName())
+        		            .collect(Collectors.toList());
+        		    return SoundDto.toDto(sound, sound.getUploader(), tagNames);
+        		})
                 .toList();
     }
 
